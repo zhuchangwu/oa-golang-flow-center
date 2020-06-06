@@ -9,11 +9,10 @@ import (
 )
 
 func main() {
-
 	// 构建server
 	grpcSewrver := grpc.NewServer()
 	// 注册server
-	flow_center.RegisterFlowServiceServer(grpcSewrver,new(services.FlowCentorService))
+	flow_center.RegisterFlowServiceServer(grpcSewrver,new(services.FlowCenterService))
 	// 监听，协议
 	lis, _ :=net.Listen("tcp", ":8083")
 	fmt.Println("Server started")

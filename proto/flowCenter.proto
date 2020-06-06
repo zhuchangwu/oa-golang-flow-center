@@ -21,4 +21,7 @@ message Response{
 // 服务：服务中有方法可以进行rpc过程
 service FlowService{
   rpc CreateFlow(Flow) returns (Response){}
+
+  // 服务端返回stream
+  rpc CreateFlowResponseByServerStream(Flow) returns (stream Response){}
 }
