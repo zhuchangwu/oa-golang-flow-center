@@ -24,4 +24,8 @@ service FlowService{
 
   // 服务端返回stream
   rpc CreateFlowResponseByServerStream(Flow) returns (stream Response){}
+
+  // 客户端往服务端发送stream
+  rpc CreateFlowRequestByClientStream(stream Flow) returns (Response){}
+
 }

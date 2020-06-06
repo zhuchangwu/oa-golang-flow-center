@@ -10,8 +10,62 @@ import (
 )
 
 func main() {
-	//	client()
-		client2()
+	//	client1()
+	client2()
+	// client3()
+}
+
+/**
+ * 客户端发送stream
+ * 这种场景中，客户端可以将数据分批发送到服务端
+ */
+
+func client3() {
+	// 创建客户端
+	conn, err := grpc.Dial(":8083", grpc.WithInsecure())
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+	client := flow_center.NewFlowServiceClient(conn)
+
+	stream, err := client.CreateFlowRequestByClientStream(context.Background())
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+
+	// 模拟客户端将大数据拆分成小分片，通过stream发往server
+	for i := 0; i < 10; i++ {
+		f := &flow_center.Flow{
+			FlowType:  "reibersement",
+			RecordId:  1,
+			Applicate: "changwu",
+			RoleMap: map[string]string{
+				"manager": "tom",
+				"boss":    "jerry",
+			},
+			DepartmentId: 2,
+		}
+		err = stream.Send(f)
+		if err != nil {
+			fmt.Printf("error : %v", err)
+			return
+		}
+	}
+
+	// 数据全部发送完成后，通过这个方法得到服务端的响应
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+
+	// 解析响应结果
+	fmt.Printf("flowId:[%v]\n", res.GetFlowId())
+	fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
+
+
 }
 
 /**
@@ -46,11 +100,14 @@ func client2() {
 		return
 	}
 
-	for  {
+	for {
 		res, err := streamClient.Recv()
-		if err==io.EOF{
-			fmt.Printf("flowId:[%v]\n", res.GetFlowId())
-			fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
+		if err == io.EOF {
+			fmt.Println("********************************")
+			// 这里面没有数据了～
+			// fmt.Printf("flowId:[%v]\n", res.GetFlowId())
+			// fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
+			fmt.Println("********************************")
 			return
 		}
 		if err != nil {
@@ -62,13 +119,13 @@ func client2() {
 		fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
 	}
 
-	time.Sleep(time.Second*5)
+	time.Sleep(time.Second * 5)
 }
 
 /**
  * client和server交互 obj
  */
-func client() {
+func client1() {
 	// 创建一个连接
 	conn, err := grpc.Dial(":8083", grpc.WithInsecure())
 	if err != nil {

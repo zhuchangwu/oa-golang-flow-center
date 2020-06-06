@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"io"
 	flow_center "oa-flow-centor/proto/oa/flow-center"
 )
 
@@ -19,14 +20,7 @@ type FlowCenterService struct {
  */
 func (s *FlowCenterService) CreateFlow(ctx context.Context, request *flow_center.Flow) (*flow_center.Response, error) {
 	// 解析请求
-	fmt.Println("-------------------------接收到请求------------------------")
-	fmt.Printf("application：[%v]\n",request.Applicate)
-	fmt.Printf("deparmentId：[%v]\n",request.DepartmentId)
-	fmt.Printf("recoredId：[%v]\n",request.RecordId)
-	fmt.Printf("flowType：[%v]\n",request.FlowType)
-	fmt.Printf("roleMap：[%#v]\n",request.RoleMap)
-	fmt.Println("-------------------------接收到请求------------------------")
-
+	printFlowInfo(request)
 
 	r := &flow_center.Response{
 		FlowId:      1,
@@ -35,20 +29,13 @@ func (s *FlowCenterService) CreateFlow(ctx context.Context, request *flow_center
 	return r, nil
 }
 
-
 /**
  * 服务端接受client obj，返回给client stream
  */
-func (s *FlowCenterService)CreateFlowResponseByServerStream(request *flow_center.Flow,stream flow_center.FlowService_CreateFlowResponseByServerStreamServer)(error){
+func (s *FlowCenterService) CreateFlowResponseByServerStream(request *flow_center.Flow, stream flow_center.FlowService_CreateFlowResponseByServerStreamServer) error {
 
 	// 解析请求
-	fmt.Println("-------------------------接收到请求------------------------")
-	fmt.Printf("application：[%v]\n",request.Applicate)
-	fmt.Printf("deparmentId：[%v]\n",request.DepartmentId)
-	fmt.Printf("recoredId：[%v]\n",request.RecordId)
-	fmt.Printf("flowType：[%v]\n",request.FlowType)
-	fmt.Printf("roleMap：[%#v]\n",request.RoleMap)
-	fmt.Println("-------------------------接收到请求------------------------")
+	printFlowInfo(request)
 
 	for i := 0; i < 20; i++ {
 		// 假设是循环读取某数据，并将每次读取到的结果发送到客户端中
@@ -58,7 +45,7 @@ func (s *FlowCenterService)CreateFlowResponseByServerStream(request *flow_center
 			FlowId:      1,
 			ResponseMsg: "successfully",
 		}
-		err:=stream.Send(r)
+		err := stream.Send(r)
 		if err != nil {
 			fmt.Printf("error : %v", err)
 			return err
@@ -67,4 +54,44 @@ func (s *FlowCenterService)CreateFlowResponseByServerStream(request *flow_center
 	}
 
 	return nil
+}
+
+/**
+ * 服务端接受client obj，返回给client stream
+ */
+func (s *FlowCenterService) CreateFlowRequestByClientStream(clientStream flow_center.FlowService_CreateFlowRequestByClientStreamServer) (err error) {
+
+	// client会发送stream过来，故我们在这里循环处理
+	for {
+		flow, err := clientStream.Recv()
+		if err == io.EOF {
+			fmt.Println("接受完毕，关闭stream")
+			// 处理完成，向客户端写回响应
+			r := &flow_center.Response{
+				FlowId:      1,
+				ResponseMsg: "successfully",
+			}
+			err = clientStream.SendAndClose(r)
+			break
+		}
+		if err != nil {
+			fmt.Printf("error : %v", err)
+			return err
+		}
+		printFlowInfo(flow)
+	}
+
+	return
+}
+
+// 打印
+func printFlowInfo(flow *flow_center.Flow) {
+	// 解析请求
+	fmt.Println("-------------------------接收到请求------------------------")
+	fmt.Printf("application：[%v]\n", flow.Applicate)
+	fmt.Printf("deparmentId：[%v]\n", flow.DepartmentId)
+	fmt.Printf("recoredId：[%v]\n", flow.RecordId)
+	fmt.Printf("flowType：[%v]\n", flow.FlowType)
+	fmt.Printf("roleMap：[%#v]\n", flow.RoleMap)
+	fmt.Println("-------------------------接收到请求------------------------")
 }
