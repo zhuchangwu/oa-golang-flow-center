@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "oa/flow-center";
+
+
+// 定义消息，消息为service中发送或者是接受的内容
+message Flow {
+  string flowType = 1;
+  map<string, string> roleMap = 2;
+  string applicate = 3;
+  int32  departmentId = 4;
+  int32  recordId = 5;
+}
+
+message Response{
+  int32 flowId = 1;
+  string responseMsg = 2;
+}
+
+// 服务：服务中有方法可以进行rpc过程
+service FlowService{
+  rpc CreateFlow(Flow) returns (Response){}
+}
