@@ -11,15 +11,65 @@ import (
 
 func main() {
 	//	client1()
-	client2()
+	// client2()
 	// client3()
+	 client4()
+}
+
+/**
+ * 客户端服务端使用双向stream
+ * 这种场景中，客户端可以将数据分批发送到服务端
+ */
+func client4() {
+	// 创建客户端
+	conn, err := grpc.Dial(":8083", grpc.WithInsecure())
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+	defer conn.Close()
+	client := flow_center.NewFlowServiceClient(conn)
+
+	// 调用方法发送请求
+	stream, err := client.CreateFlowByBidirectionalStream(context.Background())
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+
+	// 模拟有好多批数据
+	for i := 0; i < 10; i++ {
+		// 通过流发送一段数据
+		f := &flow_center.Flow{
+			FlowType:  "reibersement",
+			RecordId:  1,
+			Applicate: "changwu",
+			RoleMap: map[string]string{
+				"manager": "tom",
+				"boss":    "jerry",
+			},
+			DepartmentId: 2,
+		}
+		err = stream.Send(f)
+
+		res, err := stream.Recv()
+		if err==io.EOF{
+			break
+		}
+		if err != nil {
+			fmt.Printf("error : %v", err)
+			return
+		}
+		fmt.Printf("flowId:[%v]\n", res.GetFlowId())
+		fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
+	}
+
 }
 
 /**
  * 客户端发送stream
  * 这种场景中，客户端可以将数据分批发送到服务端
  */
-
 func client3() {
 	// 创建客户端
 	conn, err := grpc.Dial(":8083", grpc.WithInsecure())
@@ -27,6 +77,7 @@ func client3() {
 		fmt.Printf("error : %v", err)
 		return
 	}
+	defer conn.Close()
 	client := flow_center.NewFlowServiceClient(conn)
 
 	stream, err := client.CreateFlowRequestByClientStream(context.Background())
@@ -64,7 +115,6 @@ func client3() {
 	// 解析响应结果
 	fmt.Printf("flowId:[%v]\n", res.GetFlowId())
 	fmt.Printf("responseMsg:[%v]\n", res.GetResponseMsg())
-
 
 }
 

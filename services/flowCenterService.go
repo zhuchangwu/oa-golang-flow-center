@@ -16,7 +16,7 @@ type FlowCenterService struct {
 }
 
 /**
- * 服务端接受client obj，返回给client obj
+ * server接受client obj，返回给client obj
  */
 func (s *FlowCenterService) CreateFlow(ctx context.Context, request *flow_center.Flow) (*flow_center.Response, error) {
 	// 解析请求
@@ -30,7 +30,7 @@ func (s *FlowCenterService) CreateFlow(ctx context.Context, request *flow_center
 }
 
 /**
- * 服务端接受client obj，返回给client stream
+ * server接受client obj，返回给client stream
  */
 func (s *FlowCenterService) CreateFlowResponseByServerStream(request *flow_center.Flow, stream flow_center.FlowService_CreateFlowResponseByServerStreamServer) error {
 
@@ -57,7 +57,7 @@ func (s *FlowCenterService) CreateFlowResponseByServerStream(request *flow_cente
 }
 
 /**
- * 服务端接受client obj，返回给client stream
+ * server接受client obj，返回给client stream
  */
 func (s *FlowCenterService) CreateFlowRequestByClientStream(clientStream flow_center.FlowService_CreateFlowRequestByClientStreamServer) (err error) {
 
@@ -82,6 +82,40 @@ func (s *FlowCenterService) CreateFlowRequestByClientStream(clientStream flow_ce
 	}
 
 	return
+}
+
+/**
+ * client ，server 双向流通信
+ */
+func (s *FlowCenterService) CreateFlowByBidirectionalStream(stream flow_center.FlowService_CreateFlowByBidirectionalStreamServer) (err error) {
+	// 接受循环处理client 消息
+	for {
+		flow, err := stream.Recv()
+		if err == io.EOF {
+			fmt.Printf("client ，server 双向流通信 err:[%v]",err)
+			break
+		}
+		if err != nil {
+			fmt.Printf("client ，server 双向流通信 err:[%v]",err)
+			return err
+		}
+
+		// 处理数据
+		printFlowInfo(flow)
+
+		// 往client写会stream
+		r := &flow_center.Response{
+			FlowId:      1,
+			ResponseMsg: "successfully",
+		}
+		err = stream.Send(r)
+		if err != nil {
+			fmt.Printf("error : %v", err)
+			return err
+		}
+	}
+
+	return err
 }
 
 // 打印

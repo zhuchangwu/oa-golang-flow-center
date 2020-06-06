@@ -28,4 +28,6 @@ service FlowService{
   // 客户端往服务端发送stream
   rpc CreateFlowRequestByClientStream(stream Flow) returns (Response){}
 
+  // 客户端，服务端双向流通信
+  rpc CreateFlowByBidirectionalStream(stream Flow) returns (stream Response){}
 }
