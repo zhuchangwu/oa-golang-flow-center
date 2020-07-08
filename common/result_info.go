@@ -2,8 +2,8 @@ package common
 
 type ResultInfo struct {
 	Code   int64 `json:"code"`
-	ResMsg string `json:""`
-	ErrMsg string `json:""`
+	ResMsg string
+	ErrMsg string
 	Obj    interface{}  `json:"objData"`
 }
 

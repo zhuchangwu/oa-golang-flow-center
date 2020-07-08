@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/astaxie/beego/orm" // todo 这里的orm导包得手动搞
+	"strconv"
 	"time"
 )
 
@@ -24,30 +25,35 @@ func NewFlowTemplate() *FlowTemplateForm {
 	return &FlowTemplateForm{}
 }
 
+// 获取所有的模版信息
+func (f *FlowTemplateForm) GetAllFlowTemplate() (*[]FlowTemplateForm, error) {
+	pOrmer := orm.NewOrm()
+	var arr []FlowTemplateForm
+	_, err := pOrmer.Raw("select * from flowTemplate").QueryRows(&arr)
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return nil, err
+	}
+	return &arr, nil
+}
+// todo 下面直接拼接sql，有sql注入的风险
 // 分页查询+模糊查询
 func (f *FlowTemplateForm) FindFlowTemplateByPageAndTemplateName(currentPage, pageSize int, name string) (fts *[]FlowTemplateForm, err error) {
 	POrmer := orm.NewOrm()
 	if currentPage <= 1 {
-		currentPage = 0
+		currentPage = 1
 	}
 	if pageSize < 0 {
 		pageSize = 10
 	}
-	var (
-		sql string
-	)
-	if len(name) != 0 {
-		sql = fmt.Sprintf("select * from flowTemplate where flow_tempalte_name like '%v' limit %v,%v ;", name, currentPage, pageSize)
-	} else {
-		sql = fmt.Sprintf("select * from flowTemplate limit %v,%v ;", currentPage, pageSize)
-	}
 	var arr []FlowTemplateForm
-	_, err = POrmer.Raw(sql).QueryRows(&arr)
-	if err != nil {
-		fmt.Printf("error : %v", err)
-		return
+	var sql string
+	if len(name)>0 {
+		sql = "select * from flowTemplate where flow_template_name like '%"+name+"%' limit "+ strconv.Itoa((currentPage-1)*pageSize)+","+strconv.Itoa(pageSize)+";"
+	}else{
+		sql = "select * from flowTemplate limit "+ strconv.Itoa((currentPage-1)*pageSize)+","+strconv.Itoa(pageSize)+";"
 	}
-
+	_, err = POrmer.Raw(sql).QueryRows(&arr)
 	return &arr, err
 }
 
@@ -55,7 +61,7 @@ func (f *FlowTemplateForm) FindFlowTemplateByPageAndTemplateName(currentPage, pa
 func (f *FlowTemplateForm) GetCountFormTable() (int, error) {
 	POrmer := orm.NewOrm()
 	var count int
-    err := POrmer.Raw("select count(*) from flowTemplate").QueryRow(&count)
+	err := POrmer.Raw("select count(*) from flowTemplate").QueryRow(&count)
 	if err != nil {
 		fmt.Printf("error : %v", err)
 		return -1, err

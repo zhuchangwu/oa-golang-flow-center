@@ -8,6 +8,7 @@ import (
 	"oa-flow-centor/models"
 	"time"
 )
+
 // todo panic 处理～～～
 type FlowController struct {
 	BaseController
@@ -126,4 +127,39 @@ func (c *FlowController) GetFlowDetailByRecord() {
 	fmt.Println("准备睡眠")
 	time.Sleep(time.Second * 10)
 	fmt.Println("结束睡眠")
+}
+
+/**
+ *  注解路由
+ *  获取所有的模版信息
+ */
+// @router /flowTemplate/getAllFlowTemplateInfo/ [get]
+func (c *FlowController) GetAllFlowTemplateInfo() {
+
+	template := models.NewFlowTemplate()
+	arr, err := template.GetAllFlowTemplate()
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		info := common.CreateErrorResultInfo("fail to get all flow template info")
+		c.Data["json"] = info
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = common.CreateSuccessfulResultInfo("successful to get all flow template info", arr)
+	c.ServeJSON()
+}
+
+/**
+ * 删除模版信息
+ */
+func (c *FlowController) DeleteFlowTemplate() {
+	id, err := c.GetInt("id")
+	if err != nil {
+		fmt.Printf("error : %v", err)
+		return
+	}
+	fmt.Println(id)
+	c.Data["json"] = "ok"
+	c.ServeJSON()
 }
